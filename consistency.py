@@ -1,0 +1,289 @@
+from relational_structure import *
+import logging
+import copy
+
+def computeProjection(R,i):
+    proj = { t[i] for t in R }
+    return proj
+
+# s is a tuple of entries from {0,...,arity(R)}.
+# Returns the relation consisting of the tuples (t[s[0]],...,t[s[...]]) where t is in R.
+def computeProjectionGeneral(R,s):
+    k = len(s)
+    proj = { tuple(t[s[i]] for i in range(k)) for t in R }
+    return proj
+
+# Computes the composition of two binary relations
+def computeComposition(R,S):
+    result = set()
+    for r,s in product(R,S):
+        if r[1]==s[0]:
+            result = result | {(r[0],s[1])}
+    return result
+
+# Returns the intersection of R with the product L[scope[0]]x...xL[scope[k-1]].
+def computeIntersection(R,L,scope):
+    S = []
+    if len(R)==0:
+        return []
+    k = len(scope)
+    
+    for s in R:
+        inside = True
+        try:
+            for i in range(0,k):
+                if s[i] not in L[scope[i]]:
+                    inside = False
+                    break
+        except:
+            logging.critical('Relation =',R)
+            logging.critical('Scope =',scope)
+            logging.critical('Tuple in R =',s)
+            logging.critical(i,k)
+            logging.critical(L[scope[i]])
+            exit()
+            
+        if inside:
+            S.append(s)
+    return S
+
+# Projects R onto each of its coordinates and updates the lists L in the process.
+# Returns True if some variable in scope has had its L-list changed and all lists are nonempty, False if no variable has changed,
+# and None if some variable's list becomes empty.
+def arcReduce(R,L,scope):
+    if len(R) == 0:
+        return None
+    k = len(R[0])
+    changed = False
+    # Project the intersection on each coordinate
+    for i in range(k):
+        previousSize = len(L[scope[i]])
+        L[scope[i]] = computeProjection(R,i)
+        if previousSize > len(L[scope[i]]):
+            changed = True
+        
+    return changed
+
+def pathReduce(R,L,scope):
+    updatedR = []
+    
+    for s in R:
+        k=len(s)
+        inside = True
+        for i,j in product(range(0,k),repeat=2):
+            if (s[i],s[j]) not in L[(scope[i],scope[j])]:
+                inside = False
+                break
+                
+        if inside:
+            updatedR.append(s)
+    
+    changed = False
+    # Project the intersection on each coordinate
+    for i in range(k):
+        for j in range(k):
+            index = (scope[i],scope[j])
+            previousSize = len(L[index])
+            L[index] = computeProjectionGeneral(updatedR,(i,j))
+            if previousSize > len(L[index]):
+                changed = True
+            if len(L[index]) == 0:
+                return None
+    return changed
+
+       
+def arcConsistency(A,B,initialL=None):
+    """ Check whether there exists a homomorphism from A to B.
+    :param A,B two structures of the same signature
+    :param initialL A dictionary. 
+            The key a of the dictionary contains a set S of elements from B.domain
+            such that a is necessarily mapped to S.
+    """
+    if A.type()!=B.type():
+        raise NonCompatibleStructures
+
+    # We COPY the dictionary given in parameter to avoid side effects
+    if initialL is None:
+        L = {}
+        for a in A.domain:
+            if a not in L:
+                L[a] = set(B.domain)
+    else:
+        L = dict(initialL)
+
+    cntIterations = 0
+    changed = True
+    while changed == True:
+        changed = False
+        # For every relation of A:
+        for i in range(len(A.relations)):
+            RA = A.relations[i]
+            RB = B.relations[i]      
+            # For every tuple t of RA, we look for the tuples of RB that are compatible with L
+            for t in RA:
+                S = computeIntersection(RB,L,t)
+                reductionResult = arcReduce(S,L,t)
+                if reductionResult==None:
+                    return None
+                changed = changed | reductionResult
+                cntIterations+=1
+    #logging.info('Number of iterations of AC:', cntIterations)
+    
+    return L
+
+def ac3Ineff(A,B,initialL=None):
+    if A.type()!=B.type():
+        raise NonCompatibleStructures
+
+    # We COPY the dictionary given in parameter to avoid side effects
+    if initialL is None:
+        L = {}
+        for a in A.domain:
+            if a not in L:
+                L[a] = set(B.domain)
+    else:
+        L = dict(initialL)
+
+    worklist = set()
+    
+    for i in range(len(A.relations)):
+        for a in A.relations[i]:
+            worklist.add((tuple(a),i))
+            
+    # Builds an adjacency list:
+    #for every a in the domain, adjacency[a] is a list of all (b,i) such that b is a tuple in A.relations[i] and a appears in b
+    adjacency = {}
+    for a in A.domain:
+        adjacency[a] = set()
+        for i in range(len(A.relations)):
+            for b in A.relations[i]:
+                if a in b:
+                    adjacency[a].add((tuple(b),i))
+            
+    cntIterations = 0
+    while len(worklist)>0:
+        (a,i) = worklist.pop()
+        RB = B.relations[i]
+        previousLengths = [ len(L[a[j]]) for j in range(len(a)) ]
+        S = computeIntersection(RB,L,a)
+        changed = arcReduce(S,L,a)
+        if changed==None:
+            return None
+        
+        changedElements = [ a[j] for j in range(len(a)) if len(L[a[j]]) < previousLengths[j] ]
+        for b in changedElements:
+            worklist |= adjacency[b]
+        cntIterations+=1
+    logging.info('Number of iterations of AC3:',cntIterations)
+    
+    return L
+
+def ac3(A,B,initialL=None,initialSignature=None,useExtentRelations=False):
+    if A.type()!=B.type():
+        raise NonCompatibleStructures
+
+    logging.debug('Starting ac3')
+    # We COPY the dictionary given in parameter to avoid side effects
+    if initialL is None:
+        L = {}
+        for a in A.domain:
+            L[a] = set(B.domain)
+    else:
+        L = dict(initialL)
+    logging.debug('Finished preparing the L list')
+
+    worklist = set()
+    
+    if useExtentRelations:
+        if initialSignature is None:
+            newSignature = {}
+
+            for i in range(len(A.relations)):
+                for a in A.relations[i]:
+                    newSignature[tuple(a)] = set(product(B.domain,repeat=len(a)))
+        else:
+            newSignature = dict(initialSignature)
+                
+    initialSizes = [ len(L[a]) for a in A.domain]
+    
+    for i in range(len(A.relations)):
+        for a in A.relations[i]:
+            worklist.add((tuple(a),i))
+            #newSignature[tuple(a)] = copy.copy(B.relations[i])
+            #print(len(a),len(newSignature[tuple(a)]))
+    logging.info('Size of the new signature:',len(newSignature))
+    
+            
+    # Builds an adjacency list:
+    #for every a in the domain, adjacency[a] is a list of all (b,i) such that b is a tuple in A.relations[i] and a appears in b
+    adjacency = {}
+    for a in A.domain:
+        adjacency[a] = set()
+        for i in range(len(A.relations)):
+            for b in A.relations[i]:
+                if a in b:
+                    adjacency[a].add((tuple(b),i))
+            
+    cntIterations = 0
+    
+    while len(worklist)>0:
+        (a,i) = worklist.pop()
+        previousLengths = [ len(L[a[j]]) for j in range(len(a)) ]
+        
+        if useExtentRelations:
+            newSignature[tuple(a)] = computeIntersection(newSignature[tuple(a)],L,a)
+            changed = arcReduce(newSignature[tuple(a)],L,a)
+        else:
+            RB = B.relations[i]
+            S = computeIntersection(RB,L,a)
+            changed = arcReduce(S,L,a)
+            
+        if changed==None:
+            return None
+        
+        changedElements = [ a[j] for j in range(len(a)) if len(L[a[j]]) < previousLengths[j] ]
+        for b in changedElements:
+            worklist |= adjacency[b]
+        cntIterations+=1
+    #logging.info('Number of iterations of AC3:',cntIterations)
+    
+    if useExtentRelations:
+        return L,newSignature
+    else:
+        return L
+
+def twoThreeMinimality(A,B,initialL=None):
+    if A.type() != B.type():
+        raise NonCompatibleStructures
+         
+    # We COPY the dictionary given in parameter to avoid side effects
+    if initialL is None:
+        L = {}
+        for a in product(A.domain,repeat=2):
+            if a not in L:
+                L[a] = set(product(B.domain,repeat=2))
+    else:
+        L = dict(initialL)
+    
+    changed = True
+    while changed == True:
+        changed = False
+        # For every relation of A:
+        for i in range(0,len(A.relations)):
+            RA = A.relations[i]
+            k = A.arities[i]
+            RB = B.relations[i]
+            # For every tuple t of RA, we look for the tuples of B that are compatible with L
+            for t in RA:
+                changed = pathReduce(RB,L,t)
+                if changed==None:
+                    return None
+                
+        for i,j in product(A.domain,repeat=2):
+            for k in A.domain:
+                previousLen = len(L[(i,j)])
+                L[(i,j)] = L[(i,j)] & computeComposition(L[(i,k)], L[(k,j)])
+                if len(L[(i,j)]) < previousLen:
+                    changed = True
+                
+    return L
