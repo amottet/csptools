@@ -211,7 +211,7 @@ def ac3(A,B,initialL=None,initialSignature=None,useExtentRelations=False):
             worklist.add((tuple(a),i))
             #newSignature[tuple(a)] = copy.copy(B.relations[i])
             #print(len(a),len(newSignature[tuple(a)]))
-    logging.info('Size of the new signature:',len(newSignature))
+    
     
             
     # Builds an adjacency list:

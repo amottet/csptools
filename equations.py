@@ -56,7 +56,7 @@ def polymorphismsWithIdentities(A,B,equations,idempotent=False):
     #return csptosat(Factor,B,L)
 
 def siggers(A):
-    Siggers = [ (('xyzx'), ('yxyz')) ]
+    Siggers = [ ('xyzx', 'yxyz') ]
     yield from polymorphismsWithIdentities(A,A,Siggers)
     
 # check if A has a ternary WNU
@@ -66,11 +66,11 @@ def ternaryWNU(A):
     yield from polymorphismsWithIdentities(A,A,TernaryWNU)
     
 def ternaryQNU(A):
-    TernaryQNU = [ (('xxy','xyx'),('xyx','yxx'),('yxx','xxx'))]
+    TernaryQNU = [ ('xxy','xyx'),('xyx','yxx'),('yxx','xxx')]
     yield from polymorphismsWithIdentities(A,A,TernaryQNU)
     
 def majority(A):
-    majority = [ (('xxy','xyx'),('xyx','yxx'),('yxx','xxx'))]
+    majority = [ ('xxy','xyx'),('xyx','yxx'),('yxx','xxx')]
     yield from polymorphismsWithIdentities(A,A,majority,idempotent=True)
 
 def malcev(A):
