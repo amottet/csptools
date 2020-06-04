@@ -63,34 +63,6 @@ def arcReduce(R,L,scope):
             changed = True
         
     return changed
-
-def pathReduce(R,L,scope):
-    updatedR = []
-    
-    for s in R:
-        k=len(s)
-        inside = True
-        for i,j in product(range(0,k),repeat=2):
-            if (s[i],s[j]) not in L[(scope[i],scope[j])]:
-                inside = False
-                break
-                
-        if inside:
-            updatedR.append(s)
-    
-    changed = False
-    # Project the intersection on each coordinate
-    for i in range(k):
-        for j in range(k):
-            index = (scope[i],scope[j])
-            previousSize = len(L[index])
-            L[index] = computeProjectionGeneral(updatedR,(i,j))
-            if previousSize > len(L[index]):
-                changed = True
-            if len(L[index]) == 0:
-                return None
-    return changed
-
        
 def arcConsistency(A,B,initialL=None):
     """ Check whether there exists a homomorphism from A to B.
@@ -131,52 +103,6 @@ def arcConsistency(A,B,initialL=None):
     
     return L
 
-def ac3Ineff(A,B,initialL=None):
-    if A.type()!=B.type():
-        raise NonCompatibleStructures
-
-    # We COPY the dictionary given in parameter to avoid side effects
-    if initialL is None:
-        L = {}
-        for a in A.domain:
-            if a not in L:
-                L[a] = set(B.domain)
-    else:
-        L = dict(initialL)
-
-    worklist = set()
-    
-    for i in range(len(A.relations)):
-        for a in A.relations[i]:
-            worklist.add((tuple(a),i))
-            
-    # Builds an adjacency list:
-    #for every a in the domain, adjacency[a] is a list of all (b,i) such that b is a tuple in A.relations[i] and a appears in b
-    adjacency = {}
-    for a in A.domain:
-        adjacency[a] = set()
-        for i in range(len(A.relations)):
-            for b in A.relations[i]:
-                if a in b:
-                    adjacency[a].add((tuple(b),i))
-            
-    cntIterations = 0
-    while len(worklist)>0:
-        (a,i) = worklist.pop()
-        RB = B.relations[i]
-        previousLengths = [ len(L[a[j]]) for j in range(len(a)) ]
-        S = computeIntersection(RB,L,a)
-        changed = arcReduce(S,L,a)
-        if changed==None:
-            return None
-        
-        changedElements = [ a[j] for j in range(len(a)) if len(L[a[j]]) < previousLengths[j] ]
-        for b in changedElements:
-            worklist |= adjacency[b]
-        cntIterations+=1
-    logging.info('Number of iterations of AC3:',cntIterations)
-    
-    return L
 
 def ac3(A,B,initialL=None,initialSignature=None,useExtentRelations=False):
     if A.type()!=B.type():
@@ -209,9 +135,6 @@ def ac3(A,B,initialL=None,initialSignature=None,useExtentRelations=False):
     for i in range(len(A.relations)):
         for a in A.relations[i]:
             worklist.add((tuple(a),i))
-            #newSignature[tuple(a)] = copy.copy(B.relations[i])
-            #print(len(a),len(newSignature[tuple(a)]))
-    
     
             
     # Builds an adjacency list:
@@ -251,39 +174,3 @@ def ac3(A,B,initialL=None,initialSignature=None,useExtentRelations=False):
         return L,newSignature
     else:
         return L
-
-def twoThreeMinimality(A,B,initialL=None):
-    if A.type() != B.type():
-        raise NonCompatibleStructures
-         
-    # We COPY the dictionary given in parameter to avoid side effects
-    if initialL is None:
-        L = {}
-        for a in product(A.domain,repeat=2):
-            if a not in L:
-                L[a] = set(product(B.domain,repeat=2))
-    else:
-        L = dict(initialL)
-    
-    changed = True
-    while changed == True:
-        changed = False
-        # For every relation of A:
-        for i in range(0,len(A.relations)):
-            RA = A.relations[i]
-            k = A.arities[i]
-            RB = B.relations[i]
-            # For every tuple t of RA, we look for the tuples of B that are compatible with L
-            for t in RA:
-                changed = pathReduce(RB,L,t)
-                if changed==None:
-                    return None
-                
-        for i,j in product(A.domain,repeat=2):
-            for k in A.domain:
-                previousLen = len(L[(i,j)])
-                L[(i,j)] = L[(i,j)] & computeComposition(L[(i,k)], L[(k,j)])
-                if len(L[(i,j)]) < previousLen:
-                    changed = True
-                
-    return L

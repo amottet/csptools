@@ -92,24 +92,6 @@ class Partition:
             [a,b] = next(self.iterprod)
         return [a,b]
 
-    def closeUnderOperations(self,F):
-        """ Closes the partition under the operations in F. """
-        changed = 1
-        while changed == 1:
-            changed = 0
-            for f in F:
-                if f.domain != set(self.domain):
-                    logging.error('Partition::closeUnderOperations: the operations must have the same domain as the partition.')
-                    return
-                for arg in product(self, repeat=f.arity):
-                    s = []
-                    t = []
-                    for a in arg:
-                        s.append(a[0])
-                        t.append(a[1])
-                    c,d = f.value(tuple(s)), f.value(tuple(t))
-                    changed = changed or self.union(c,d)
-
     def intersection(self,Q):
         """ Finds the inf of self and Q. """
         if self.domain != Q.domain:
