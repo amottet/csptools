@@ -41,6 +41,7 @@ class ZhukSolver(Solver):
                 self.poly = s
                 break
             if self.poly == None:
+                logging.info('ZhukSolver:The template has no idempotent Siggers polymorphism.')
                 raise IntractableTemplate
                 
     def solve(self,X):
@@ -65,7 +66,12 @@ def homomorphisms(A,B, initialL=None):
 
     # If no such element exists, the homomorphism is completely defined and we return it
     if nextElem == None:
-        yield L
+        unpackedL = dict()
+        for a in A.domain:
+            for im in L[a]:
+                unpackedL[a] = im
+                break
+        yield unpackedL
         
     else:
         oldSet = L[a]
