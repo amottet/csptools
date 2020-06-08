@@ -36,14 +36,16 @@ def absorbingSubsets(A,f,arity):
             yield B
             
 def isCenter(A,C,f,arity):
-    f2 = dict()
+    if not isAbsorbing(A,C,f,arity):
+        return False
     
-    for a in product(A,repeat=3):
-        for a2 in product(A,repeat=3):
+    f2 = dict()
+    for a in product(A,repeat=arity):
+        for a2 in product(A,repeat=arity):
             f2[tuple(zip(a,a2))] = (f[a],f[a2])
     
     for a in A-C:
-        D = subuniverseGenerated(product(C|{a}, repeat=2),f2,arity)
+        D = subuniverseGenerated(set(product(C,{a})) | set(product({a},C)),f2,arity)
         if (a,a) in D:
             return False
     return True
