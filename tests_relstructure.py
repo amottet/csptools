@@ -28,4 +28,4 @@ for [i,j,k] in product(Domain,repeat=3):
 
 assert(len(Theta.blocks()) == 6*9 + 3)
 G = H.quotient(Theta)
-assert(len(G.domain) == 6*9+3))
+assert(len(G.domain) == 6*9+3)
