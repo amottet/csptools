@@ -1,5 +1,4 @@
 from relational_structure import *
-from polymorphisms import *
 from equations import *
 
 def complexity(A):

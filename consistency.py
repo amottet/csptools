@@ -104,19 +104,20 @@ def arcConsistency(A,B,initialL=None):
     return L
 
 
-def ac3(A,B,initialL=None,initialSignature=None,useExtentRelations=False):
+def ac3(A,B,initialL=None,initialSignature=None,useExtentRelations=False):    
     if A.type()!=B.type():
         raise NonCompatibleStructures
-
-    logging.debug('Starting ac3')
+    
+    logging.debug('ac3:')
     # We COPY the dictionary given in parameter to avoid side effects
+    
     if initialL is None:
         L = {}
         for a in A.domain:
-            L[a] = set(B.domain)
+            L[a] = B.domain
     else:
         L = dict(initialL)
-    logging.debug('Finished preparing the L list')
+    logging.debug('ac3:Finished preparing the L list')
 
     worklist = set()
     
@@ -126,7 +127,7 @@ def ac3(A,B,initialL=None,initialSignature=None,useExtentRelations=False):
 
             for i in range(len(A.relations)):
                 for a in A.relations[i]:
-                    newSignature[tuple(a)] = set(product(B.domain,repeat=len(a)))
+                    newSignature[tuple(a)] = B.relations[i]
         else:
             newSignature = dict(initialSignature)
                 
@@ -147,22 +148,26 @@ def ac3(A,B,initialL=None,initialSignature=None,useExtentRelations=False):
                 if a in b:
                     adjacency[a].add((tuple(b),i))
             
-    cntIterations = 0
     
+    
+    cntIterations = 0
     while len(worklist)>0:
         (a,i) = worklist.pop()
         previousLengths = [ len(L[a[j]]) for j in range(len(a)) ]
         
         if useExtentRelations:
-            newSignature[tuple(a)] = computeIntersection(newSignature[tuple(a)],L,a)
-            changed = arcReduce(newSignature[tuple(a)],L,a)
+            newSignature[a] = computeIntersection(newSignature[a],L,a)
+            changed = arcReduce(newSignature[a],L,a)
         else:
             RB = B.relations[i]
             S = computeIntersection(RB,L,a)
             changed = arcReduce(S,L,a)
             
         if changed==None:
-            return None
+            if useExtentRelations:
+                return None,None
+            else:
+                return None
         
         changedElements = [ a[j] for j in range(len(a)) if len(L[a[j]]) < previousLengths[j] ]
         for b in changedElements:

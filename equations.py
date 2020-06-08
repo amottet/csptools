@@ -1,4 +1,4 @@
-from polymorphisms import homomorphisms
+from solver import homomorphisms
 from itertools import product
 from relational_structure import *
 from csptosat import *
@@ -55,7 +55,7 @@ def polymorphismsWithIdentities(A,B,equations,idempotent=False):
             L[representative] = set(B.domain)
     logging.debug('polymorphismsWithIdentities:Finished preparing the factor')
 
-    for h in homomorphisms(Factor,B):
+    for h in homomorphisms(Factor,B,L):
         g = dict()
         for a in An.domain:
             representative = An.domain[indicatorPartition.representative(a)]

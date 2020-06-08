@@ -1,5 +1,7 @@
 from relational_structure import *
 from consistency import *
+from absorption import *
+from equations import *
 
 
 # Testing projections
@@ -56,3 +58,11 @@ assert(L2['s'] == {'a','b'})
 assert(L2['t'] == {'b','c'})
 
 assert(arcConsistency(P1,P2d) == None)
+
+n = None
+for m in majority(P1):
+    n = m
+    break
+print(n)
+for B in absorbingSubsets({0,1},n,3):
+    print(B)

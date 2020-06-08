@@ -1,5 +1,5 @@
-from polymorphisms import homomorphisms
-from equations import siggers
+import equations
+import consistency
 from csptosat import csptosat
 import logging
 
@@ -36,7 +36,7 @@ class ZhukSolver(Solver):
         if wnu != None:
             self.poly = wnu
         else:
-            for s in siggers(self.template,idempotent=True):
+            for s in equations.siggers(self.template,idempotent=True):
                 logging.info('ZhukSolver:Found a Siggers polymorphism of the template')
                 self.poly = s
                 break
