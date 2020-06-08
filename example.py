@@ -1,6 +1,7 @@
 from csptools import *
+import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.getLogger().setLevel(logging.INFO)
 
 domain = {1,2,3}
 E = [ [1,2],[2,3] ] # list of pairs...

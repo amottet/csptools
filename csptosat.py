@@ -2,6 +2,7 @@ from pysat.solvers import Glucose3
 from relational_structure import *
 from itertools import *
 from consistency import computeIntersection,arcConsistency,ac3
+import logging
 
 class SatThread:
     def __init__(self,A,B,L,table,range_of_relations):
@@ -81,18 +82,17 @@ def buildSATInstance(g,A,B,L,extentRelations):
     return (cntPrimaryVariables,reverseTable)
 
 def csptosat(A,B,initialL=None):
-    newSignature = {}
-    L,newSignature = ac3(A,B,initialL,newSignature,True)
+    L,newSignature = ac3(A,B,initialL,None,True)
     
     if L == None:
         return None
  
-    print('Starting glucose')
+    logging.debug('csptosat:Starting glucose')
     g = Glucose3()
     cntPrimaryVariables,table = buildSATInstance(g,A,B,L,newSignature)
-    print('instance built', cntPrimaryVariables,'variables')
+    logging.debug('csptosat:instance built, {:d} variables'.format(cntPrimaryVariables))
     if g.solve():
-        print('solved')
+        logging.debug('csptosat:solved')
         sol = g.get_model()
         h = {}
         for i in range(cntPrimaryVariables):

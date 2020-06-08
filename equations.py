@@ -55,17 +55,20 @@ def polymorphismsWithIdentities(A,B,equations,idempotent=False):
             L[representative] = set(B.domain)
     logging.debug('polymorphismsWithIdentities:Finished preparing the factor')
 
-    yield from homomorphisms(Factor,B,L)
+    for h in homomorphisms(Factor,B):
+        g = dict()
+        for a in An.domain:
+            representative = An.domain[indicatorPartition.representative(a)]
+            g[a] = h[representative]
+        yield g
     #return csptosat(Factor,B,L)
 
-def siggers(A):
+def siggers(A,idempotent=False):
     Siggers = [ ('xyzx', 'yxyz') ]
-    yield from polymorphismsWithIdentities(A,A,Siggers)
+    yield from polymorphismsWithIdentities(A,A,Siggers,idempotent)
     
-# check if A has a ternary WNU
 def ternaryWNU(A):
-    TernaryWNU = [ (('x','x','y'),('x','y','x')),
-            (('x','x','y'),('y','x','x'))]
+    TernaryWNU = [ ('xxy','xyx'), ('xxy','yxx')]
     yield from polymorphismsWithIdentities(A,A,TernaryWNU)
     
 def ternaryQNU(A):
@@ -77,6 +80,6 @@ def majority(A):
     yield from polymorphismsWithIdentities(A,A,majority,idempotent=True)
 
 def malcev(A):
-    Malcev = [ (('y','x','x'),('x','x','y')), (('y','x','x'),('y','y','y')) ]
-    yield from polymorphismsWithIdentities(A,A,Malcev)
+    Malcev = [ ('yxx','xxy'), ('yxx','yyy') ]
+    yield from polymorphismsWithIdentities(A,A,Malcev,idempotent=True)
 

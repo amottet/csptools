@@ -5,5 +5,5 @@ from equations import *
 def complexity(A):
     for s in siggers(A):
         return "P"
-    else:
-        return "NP-complete"
+    
+    return "NP-complete"
