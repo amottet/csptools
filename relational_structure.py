@@ -1,6 +1,5 @@
 from itertools import product
 from partition import *
-from polymorphisms import *
 
 class NonCompatibleStructures(Exception):
     pass
