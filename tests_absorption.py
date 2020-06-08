@@ -17,3 +17,5 @@ for m in majority(P1):
 
 absorbing = tuple( B for B in absorbingSubsets({0,1},n,3))
 assert(absorbing == ({0},{1},{0,1}))
+
+print(isCenter({0,1},{0},n,3))
