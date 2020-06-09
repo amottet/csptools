@@ -1,6 +1,5 @@
 from solver import *
 from relational_structure import *
-from polymorphisms import *
 import logging
 
 Domain = {1,2,3}
@@ -21,9 +20,12 @@ EH = [ (0,1),(1,0) ]
 P1 = RelationalStructure(VH, [[EH,2]])
 P1d = RelationalStructure({'s','t'}, [[[('s','t')],2] ])
 
+logging.getLogger().setLevel(logging.INFO)
 solver = ZhukSolver(P2d)
 assert(solver.poly != None)
 assert(solver.solve(P1) == None)
+print(solver.absorbingSubuniverses)
+print(solver.centers)
 
 ac = ACSolver(P2d)
 assert(ac.solve(P1) == None)
