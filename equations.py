@@ -1,7 +1,6 @@
-from solver import homomorphisms
+import solver
 from itertools import product
 from relational_structure import *
-from csptosat import *
 import partition
 import logging
 
@@ -55,7 +54,7 @@ def polymorphismsWithIdentities(A,B,equations,idempotent=False):
             L[representative] = set(B.domain)
     logging.debug('polymorphismsWithIdentities:Finished preparing the factor')
 
-    for h in homomorphisms(Factor,B,L):
+    for h in solver.homomorphisms(Factor,B,L):
         g = dict()
         for a in An.domain:
             representative = An.domain[indicatorPartition.representative(a)]
@@ -82,4 +81,8 @@ def majority(A):
 def malcev(A):
     Malcev = [ ('yxx','xxy'), ('yxx','yyy') ]
     yield from polymorphismsWithIdentities(A,A,Malcev,idempotent=True)
+    
+def olsak(A,B):
+    Olsak = [ ('xxyyyx','xyxyxy'), ('xyxyxy','yxxxyy')]
+    yield from polymorphismsWithIdentities(A,B,Olsak)
 

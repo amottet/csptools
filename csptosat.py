@@ -107,6 +107,8 @@ def csptosat(A,B,initialL=None):
     return h
 
 def outputdimacs(A,B,initialL=None):
+    """ Outputs the SAT instance for the homomorphism problem A->B? in the DIMACS format, widely accepted as standard format for SAT solvers. """
+    """ The output is written in the file cnf.tmp """
     L = ac3(A,B,initialL)
     
     if L == None:

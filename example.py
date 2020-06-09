@@ -12,3 +12,7 @@ structure = RelationalStructure(domain, [[E,2], [F,2]])
 for m in majority(structure):
     print(m)
     break
+    
+for o in olsak(structure,structure):
+    print(o)
+    break

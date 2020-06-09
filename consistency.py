@@ -18,7 +18,7 @@ def computeComposition(R,S):
     result = set()
     for r,s in product(R,S):
         if r[1]==s[0]:
-            result = result | {(r[0],s[1])}
+            result = result.add((r[0],s[1]))
     return result
 
 # Returns the intersection of R with the product L[scope[0]]x...xL[scope[k-1]].

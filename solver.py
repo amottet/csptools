@@ -2,6 +2,7 @@ import equations
 import consistency
 from csptosat import csptosat
 import logging
+import absorption
 
 class IntractableTemplate(Exception):
     pass
@@ -29,20 +30,27 @@ class SATSolver(Solver):
     
 # we assume the template is a core here
 class ZhukSolver(Solver):
-    def __init__(self,rel,wnu=None):
+    def __init__(self,rel,wnu=None,arity=None):
         super().__init__(rel)
         
         self.poly = None
         if wnu != None:
             self.poly = wnu
+            self.aritypoly = arity
         else:
             for s in equations.siggers(self.template,idempotent=True):
                 logging.info('ZhukSolver:Found a Siggers polymorphism of the template')
                 self.poly = s
+                self.aritypoly = 4
                 break
             if self.poly == None:
                 logging.info('ZhukSolver:The template has no idempotent Siggers polymorphism.')
                 raise IntractableTemplate
+                
+        self.absorbingSubuniverses = list(absorption.binaryAbsorbingSubsets(set(self.template.domain),self.poly,self.aritypoly))
+        logging.info('ZhukSolver:The template has {:d} binary absorbing subuniverses.'.format(len(self.absorbingSubuniverses)))
+        self.centers = list(absorption.centers(set(self.template.domain),self.poly,self.aritypoly))
+        logging.info('ZhukSolver:The template has {:d} centers.'.format(len(self.centers)))
                 
     def solve(self,X):
         return None

@@ -1,8 +1,5 @@
 from relational_structure import *
 from consistency import *
-from absorption import *
-from equations import *
-
 
 # Testing projections
 R = [ (1,2,3), (2,1,3), (3,1,2) ]
