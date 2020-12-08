@@ -1,17 +1,7 @@
 from relational_structure import *
 import logging
 import copy
-
-def computeProjection(R,i):
-    proj = { t[i] for t in R }
-    return proj
-
-# s is a tuple of entries from {0,...,arity(R)}.
-# Returns the relation consisting of the tuples (t[s[0]],...,t[s[...]]) where t is in R.
-def computeProjectionGeneral(R,s):
-    k = len(s)
-    proj = { tuple(t[s[i]] for i in range(k)) for t in R }
-    return proj
+import general
 
 # Computes the composition of two binary relations
 def computeComposition(R,S):
@@ -58,7 +48,7 @@ def arcReduce(R,L,scope):
     # Project the intersection on each coordinate
     for i in range(k):
         previousSize = len(L[scope[i]])
-        L[scope[i]] = computeProjection(R,i)
+        L[scope[i]] = general.computeProjection(R,i)
         if previousSize > len(L[scope[i]]):
             changed = True
         
